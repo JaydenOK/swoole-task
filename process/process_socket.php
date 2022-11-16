@@ -8,21 +8,22 @@ use Swoole\Process;
 use function Swoole\Coroutine\run;
 
 //由于导出是 Coroutine\Socket 对象，必须在协程容器中使用，所以 Swoole\Process 构造函数 $enable_coroutine 参数必须为 true。
-$proc1 = new Process(function (Process $proc) {
+$process1 = new Process(function (Process $proc) {
     //导出创建的子进程为Coroutine\Socket对象使用
     //进程重命名：name 方法应当在 start 之后的子进程回调函数中使用
     $proc->name('child-process-1');
     $socket = $proc->exportSocket();
-    echo $socket->recv();
-    $socket->send("hello master\n");
-    echo "proc1 stop\n";
+    while ($receive = $socket->recv()) {
+        echo "process1:receive:{$receive}" . PHP_EOL;
+        $socket->send("1111");
+    }
     //子进程执行完，回调wait(true)，结束父进程阻塞
     //退出子进程
     $proc->exit();
 }, false, 1, true);
-$proc1->start();
+$process1->start();
 
-$proc2 = new Process(function (Process $proc2) {
+$process2 = new Process(function (Process $proc2) {
     $proc2->name('child-process-2');
     $socket = $proc2->exportSocket();
     echo $socket->recv();
@@ -30,15 +31,15 @@ $proc2 = new Process(function (Process $proc2) {
     echo "proc2 stop\n";
     $proc2->exit();
 }, false, 1, true);
-$proc2->start();
+$process2->start();
 
 //同样的父进程想用 Coroutine\Socket 对象，需要手动 Coroutine\run() 以创建协程容器
-run(function () use ($proc1, $proc2) {
-    $socket = $proc1->exportSocket();
+run(function () use ($process1, $process2) {
+    $socket = $process1->exportSocket();
     $socket->send("hello pro1\n");
     var_dump($socket->recv());
 
-    $socket2 = $proc2->exportSocket();
+    $socket2 = $process2->exportSocket();
     $socket2->send("hello pro2\n");
     var_dump($socket2->recv());
 });
@@ -61,3 +62,12 @@ Swoole\Process::signal(SIGCHLD, function ($sig) {
 //使当前进程蜕变为一个守护进程。
 //蜕变为守护进程时，该进程的 PID 将发生变化，可以使用 getmypid() 来获取当前的 PID
 Swoole\Process::daemon(true);
+
+
+//kill() 向指定 pid 进程发送信号。
+//$pid = 5555;
+//if (Swoole\Process::kill($pid, 0)) {
+//    Swoole\Process::kill($pid, SIGTERM);
+//} else {
+//    exit('smc-server服务未启动' . PHP_EOL);
+//}
