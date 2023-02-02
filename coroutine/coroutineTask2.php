@@ -63,7 +63,7 @@
  *
  */
 
-class coroutineTask3
+class coroutineTask2
 {
     /**
      * @var \Swoole\Database\PDOPool
@@ -71,7 +71,7 @@ class coroutineTask3
     protected $pdoPool;
 
     //PdoMysql连接池，协程支持并发访问请求接口
-    public function test3(array $params = [])
+    public function run(array $params = [])
     {
         $httpServer = new Swoole\Http\Server("0.0.0.0", 9901, SWOOLE_BASE);
         $httpServer->on('WorkerStart', function (Swoole\Server $server, int $workerId) {

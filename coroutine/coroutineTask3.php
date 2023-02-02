@@ -5,14 +5,15 @@
  *
  */
 
-class coroutineTask2
+class coroutineTask3
 {
 
     public function run(array $params)
     {
-        //一键协程化
-        Swoole\Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
+        //一键协程化，被`Hook`的函数需要在[协程容器]中使用
+        //Swoole\Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
         //所有的协程必须在协程容器里面创建，Swoole 程序启动的时候大部分情况会自动创建协程容器，其他直接裸写协程的方式启动程序，需要先创建一个协程容器 (Coroutine\run() 函数
+        Swoole\Coroutine::set(['hook_flags' => SWOOLE_HOOK_ALL]); //不包括CURL， v4.4+版本使用此方法。从 v4.5.4 版本起，`SWOOLE_HOOK_ALL` 包括 `SWOOLE_HOOK_CURL`
         Swoole\Coroutine\Run(function () {
             $total = isset($params['limit']) && !empty($params['total']) ? (int)$params['total'] : 100;
             $id = isset($params['id']) && !empty($params['id']) ? $params['id'] : '';
